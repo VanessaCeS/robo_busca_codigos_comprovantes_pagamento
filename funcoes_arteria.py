@@ -2,7 +2,7 @@ from rsa_archer.archer_instance import ArcherInstance
 import datetime
 import requests
 import json
-from zeep import Client, Settings
+from zeep import Client, Settings, Transport
 import xmltodict
 import os
 from dotenv import load_dotenv
@@ -858,11 +858,12 @@ def bbb_search(search, page=1):
 
     # Para Debug
     # settings = Settings(strict=False, xml_huge_tree=True)
-    # session = Session()
+    session = Session()
+    session.verify = False
     # session.proxies = {'http': 'http://127.0.0.1:8888', 'https': 'http://127.0.0.1:8888'}
     settings = Settings(strict=False, xml_huge_tree=True)
-    # client = Client(wsdl=wsdl, transport=Transport(session=session), settings=settings)
-    client = Client(wsdl=wsdl, settings=settings)
+    client = Client(wsdl=wsdl, transport=Transport(session=session), settings=settings)
+    # client = Client(wsdl=wsdl, settings=settings)
 
     inicio = time()
 
@@ -996,11 +997,12 @@ def search(search_xml, page=1, quantidade=False):
 
     # Para Debug
     # settings = Settings(strict=False, xml_huge_tree=True)
-    # session = Session()
+    session = Session()
+    session.verify = False
     # session.proxies = {'http': 'http://127.0.0.1:8888', 'https': 'http://127.0.0.1:8888'}
     settings = Settings(strict=False, xml_huge_tree=True)
-    # client = Client(wsdl=wsdl, transport=Transport(session=session), settings=settings)
-    client = Client(wsdl=wsdl, settings=settings)
+    client = Client(wsdl=wsdl, transport=Transport(session=session), settings=settings)
+    # client = Client(wsdl=wsdl, settings=settings)
 
     inicio = time()
 

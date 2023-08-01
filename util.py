@@ -7,6 +7,7 @@ from time import time, sleep
 from unicodedata import normalize
 import re
 import pymssql
+# python -m pip install pymssql==2.2.7
 from dotenv import load_dotenv
 import os
 from pathlib import Path
@@ -19,7 +20,7 @@ import json
 
 load_dotenv('.env')
 base_path = os.environ.get('base_projeto')
-
+path_arquivos = f"{base_path}robo_pagamentos\\planilhas"
 # ==============================================================================
 #   Funções do Banco de Dados
 # ==============================================================================
