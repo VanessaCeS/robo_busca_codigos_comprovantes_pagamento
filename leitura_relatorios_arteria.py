@@ -99,17 +99,8 @@ search_xml = """<SearchReport id="15461" name="REL_BUSCADOCCOMPENSACAO">
 
 def get_dados_pagamentos_codigo_comprovantes(search_xml):
     dados = search(search_xml, page=1, quantidade=False)
-    mps = []
-    sap = []
-    for dado in dados:
-        if dado.get('Módulo de Pagamento'):
-            if dado['Módulo de Pagamento'][0] == 'SAP':
-                sap.append(dado)
-            else:
-                mps.append(dado)
-
-    return {'SAP': sap, 'MPS': mps}
+    return dados
 
 
-a = get_dados_pagamentos_codigo_comprovantes(search_xml)
-print(a)
+# a = get_dados_pagamentos_codigo_comprovantes(search_xml)
+# print(a)

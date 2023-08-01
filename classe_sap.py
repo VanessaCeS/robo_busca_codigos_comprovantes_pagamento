@@ -27,6 +27,7 @@ class SAPAutomation:
         connection = application.OpenConnection("SAP ECC", True)
         sleep(2)
         session = connection.Children(0)
+        sleep(2)
         return session
 
     def get_sap_id(self, path):
