@@ -16,7 +16,8 @@ import shutil
 from urllib.parse import unquote
 import requests
 import json
-
+from classe_sap import SAPAutomation
+sap = SAPAutomation()
 
 load_dotenv('.env')
 base_path = os.environ.get('base_projeto')
@@ -63,6 +64,10 @@ def get_token(user='integra.api'):
     result = sql_integra_get(sql)
     return result[0]['token']
 
+def get_token2(user=os.getenv("LOGIN")):
+    sql="SELECT token FROM Integra.dbo.archer_token WHERE users = '%s'" %user
+    result = sql_integra(sql)
+    return result[0]['token']
 
 # ==============================================================================
 #   Funções do Banco de Dados
@@ -363,3 +368,4 @@ def texto_reembolso_para_resumo_capa(tipo):
     if tipo == "XS2 VIDA & PREVIDENCIA S/A":
         return "RESUMO: REFERE-SE AO PAGAMENTO DE REEMBOLSO EM PROCESSO DA XS2 VIDA E PREVIDÊNCIA " \
                "ABAIXO RELACIONADO, DE INTERESSE DAS EMPRESAS DO GRUPO CAIXA SEGUROS. "
+

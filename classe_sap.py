@@ -47,7 +47,7 @@ class SAPAutomation:
             else:
                 return found[0]
         else:
-            print('Nenhum id encontrado')
+            print('50 - Nenhum id encontrado')
 
     def get_sap_correct_path(self, full_path, session):
         divided_path = full_path.split('SAPLMEGUI:')
@@ -81,13 +81,13 @@ class SAPAutomation:
                 else:
                     curr_path = found[0].id[found[0].id.find('wnd'):]
             else:
-                print('Nenhum id encontrado')
+                print('84 - Nenhum id encontrado')
         path_ending = divided_path[-1]
         if '/' in path_ending:
             path_ending = path_ending[path_ending.index('/'):]
         return curr_path + path_ending
 
-    def verfica_sap(self, objeto: object = None, get_correct: object = None) -> object:
+    def verifica_sap(self, objeto: object = None, get_correct: object = None) -> object:
         aux = 0
         if not get_correct:
             try:
@@ -104,7 +104,7 @@ class SAPAutomation:
                 pass
         return False
 
-    def verfica_sap_rapido(self, objeto=None, get_correct=None):
+    def verifica_sap_rapido(self, objeto=None, get_correct=None):
         aux = 0
         if not get_correct:
             try:
@@ -121,7 +121,7 @@ class SAPAutomation:
                 pass
         return False
 
-    def verfica_sap2(self, objeto=None, get_correct=None):
+    def verifica_sap2(self, objeto=None, get_correct=None):
         aux = 0
         if not get_correct:
             try:
@@ -144,15 +144,16 @@ class SAPAutomation:
         a = True
         tentativa = 1
         while a:
-            aux = self.verfica_sap_rapido(f"wnd[1]/usr/lbl[{i},1]").text if self.verfica_sap_rapido(
+            aux = self.verifica_sap_rapido(f"wnd[1]/usr/lbl[{i},1]").text if self.verifica_sap_rapido(
                 f"wnd[1]/usr/lbl[{i},1]") else ''
+            print("AUX ==> ", aux)
             if aux != '':
                 value = {}
                 b = True
                 j = 3
                 t = 1
                 while b:
-                    v = self.verfica_sap_rapido(f"wnd[1]/usr/lbl[{i},{j}]").text if self.verfica_sap_rapido(
+                    v = self.verifica_sap_rapido(f"wnd[1]/usr/lbl[{i},{j}]").text if self.verifica_sap_rapido(
                         f"wnd[1]/usr/lbl[{i},{j}]") else ''
                     if v != '':
                         value[f"[{i},{j}]"] = v
@@ -175,27 +176,27 @@ class SAPAutomation:
 
     # fazer a função de pegar a mensaguem do alert de erro e retornar-la
     def alert_erro_fechar(self):
-        if self.verfica_sap_rapido("wnd[1]/usr/btnBUTTON_1"):
-            self.verfica_sap_rapido("wnd[1]/usr/btnBUTTON_1").press()
+        if self.verifica_sap_rapido("wnd[1]/usr/btnBUTTON_1"):
+            self.verifica_sap_rapido("wnd[1]/usr/btnBUTTON_1").press()
 
     def login_sap_gui(self):
         try:
-            if self.verfica_sap("wnd[0]/usr/txtRSYST-MANDT"):
-                self.verfica_sap("wnd[0]/usr/txtRSYST-MANDT").text = "400"
-                self.verfica_sap("wnd[0]/usr/txtRSYST-BNAME").text = self.sap_username
-                self.verfica_sap("wnd[0]/usr/pwdRSYST-BCODE").text = self.sap_password
-                self.verfica_sap("wnd[0]/usr/txtRSYST-LANGU").text = "PT"
-                self.verfica_sap("wnd[0]").sendVKey(0)
+            if self.verifica_sap("wnd[0]/usr/txtRSYST-MANDT"):
+                self.verifica_sap("wnd[0]/usr/txtRSYST-MANDT").text = "400"
+                self.verifica_sap("wnd[0]/usr/txtRSYST-BNAME").text = self.sap_username
+                self.verifica_sap("wnd[0]/usr/pwdRSYST-BCODE").text = self.sap_password
+                self.verifica_sap("wnd[0]/usr/txtRSYST-LANGU").text = "PT"
+                self.verifica_sap("wnd[0]").sendVKey(0)
 
-                if self.verfica_sap("wnd[1]/usr/radMULTI_LOGON_OPT1"):
-                    self.verfica_sap("wnd[1]/usr/radMULTI_LOGON_OPT1").select()
-                    self.verfica_sap("wnd[1]").sendVKey(0)
+                if self.verifica_sap("wnd[1]/usr/radMULTI_LOGON_OPT1"):
+                    self.verifica_sap("wnd[1]/usr/radMULTI_LOGON_OPT1").select()
+                    self.verifica_sap("wnd[1]").sendVKey(0)
         except Exception:
             print(sys.exc_info()[0])
 
     def sap_logoff(self):
-        self.verfica_sap("wnd[0]").close()
-        self.verfica_sap("wnd[1]/usr/btnSPOP-OPTION1").press()
+        self.verifica_sap("wnd[0]").close()
+        self.verifica_sap("wnd[1]/usr/btnSPOP-OPTION1").press()
         os.system("taskkill /IM saplogon.exe /F")
 
     def get_itens_menu(self, id_menu):
@@ -220,26 +221,26 @@ class SAPAutomation:
         return itens_menu
 
     def selecionar_codigo_barra(self):
-        if not self.verfica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200"
+        if not self.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200"
                                 "/subSUB1:SAPLMEGUI:1102/tabsHEADER_DETAIL/tabpTABHDT11"):
-            self.verfica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0016/subSUB1:SAPLMEVIEWS:1100/subSUB1:SAPLMEVIEWS:4000"
+            self.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0016/subSUB1:SAPLMEVIEWS:1100/subSUB1:SAPLMEVIEWS:4000"
                              "/btnDYN_4000-BUTTON").press()
-        self.verfica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1"
+        self.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1"
                          ":SAPLMEGUI:1102/tabsHEADER_DETAIL/tabpTABHDT11").select()
-        self.verfica_sap(
+        self.verifica_sap(
             "wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1"
             ":SAPLMEGUI:1102/tabsHEADER_DETAIL/tabpTABHDT11/ssubTABSTRIPCONTROL2SUB:SAPLMEGUI:1227"
             "/ssubCUSTOMER_DATA_HEADER:SAPLXM06:0101/btnBT_UPBARCODE").press()
         time.sleep(2)
         soup = BeautifulSoup(
-            self.verfica_sap("wnd[1]/usr/cntlCC_ATTACH_BARR/shellcont/shell").BrowserHandle.Document.body.innerHTML,
+            self.verifica_sap("wnd[1]/usr/cntlCC_ATTACH_BARR/shellcont/shell").BrowserHandle.Document.body.innerHTML,
             "lxml")
         id_doc = soup.find("div", class_="doc").attrs["onclick"].replace("select(this.id, '", "").replace("')", "")
 
-        self.verfica_sap("wnd[1]/usr/cntlCC_ATTACH_BARR/shellcont/shell").sapEvent("", "",
+        self.verifica_sap("wnd[1]/usr/cntlCC_ATTACH_BARR/shellcont/shell").sapEvent("", "",
                                                                                    f"sapevent:BARZREAD|{id_doc}")
         time.sleep(2)
-        soup = BeautifulSoup(self.verfica_sap("wnd[1]/usr/subSS_OBJ_BARR:/ITSSAUTO/SAPLFG0013:0012/cntlCC_OBJ_HTML"
+        soup = BeautifulSoup(self.verifica_sap("wnd[1]/usr/subSS_OBJ_BARR:/ITSSAUTO/SAPLFG0013:0012/cntlCC_OBJ_HTML"
                                               "/shellcont/shell").BrowserHandle.Document.body.innerHTML, "lxml")
 
         barcode = soup.find("input", attrs={'name': 'barcode'})
@@ -250,21 +251,21 @@ class SAPAutomation:
                 check = '&' + checks.get("id") + '=' + checks.get("value")
             time.sleep(1)
 
-            self.verfica_sap(
+            self.verifica_sap(
                 "wnd[1]/usr/subSS_OBJ_BARR:/ITSSAUTO/SAPLFG0013:0012/cntlCC_OBJ_HTML/shellcont/shell").\
                 sapEvent("", f"barcode={barcode}{check}", "sapevent:ZBARCODE_LIST")
             time.sleep(1)
-            if self.verfica_sap("wnd[2]/tbar[0]/btn[0]"):
-                self.verfica_sap("wnd[2]/tbar[0]/btn[0]").press()
+            if self.verifica_sap("wnd[2]/tbar[0]/btn[0]"):
+                self.verifica_sap("wnd[2]/tbar[0]/btn[0]").press()
         else:
             print('A guia não tem codigo de barras.')
-        self.verfica_sap("wnd[1]").close()
+        self.verifica_sap("wnd[1]").close()
 
     def selecionar_tipo_pedido(self, tipo):
-        if self.verfica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB0:SAPLMEGUI:0030/subSUB1:SAPLMEGUI:1105"
+        if self.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB0:SAPLMEGUI:0030/subSUB1:SAPLMEGUI:1105"
                             "/txtMEPO_TOPLINE-EBELN").text != '':
-            self.verfica_sap("wnd[0]/mbar/menu[0]/menu[1]").select()
-        self.verfica_sap(
+            self.verifica_sap("wnd[0]/mbar/menu[0]/menu[1]").select()
+        self.verifica_sap(
             "wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB0:SAPLMEGUI:0030/subSUB1:SAPLMEGUI:1105/cmbMEPO_TOPLINE"
             "-BSART").key = f"{tipo}"
 
@@ -347,3 +348,32 @@ class SAPAutomation:
         except Exception as e:
             print(traceback.print_exc())
 
+
+    def buscar_comprovante(self):
+        try:
+            self.verifica_sap("wnd[0]/shellcont/shell").pressButton("VIEW_ATTA")
+            self.buscar_boy()
+            self.verifica_sap("wnd[1]/tbar[0]/btn[0]").press()
+            self.verifica_sap("wnd[0]/shellcont").close()
+            self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
+        except Exception as e:
+            self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
+            print("AAAAAAAAAAAAAA => ", e)
+        
+
+    def voltar_menu_principal(self):
+        self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
+        self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
+
+    def buscar_boy(self):
+        tabela = 0
+        autor = 0 
+        while autor < 6:
+            try:
+                    
+                if self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(tabela, "COLUMNTEXT") == 'Nome do autor': 
+                    txt = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(tabela, "VALUE")
+                    print("Nome ==> ", txt)
+                i = i + 1
+            except Exception as e:
+                print("AAAAA ===> ", e)

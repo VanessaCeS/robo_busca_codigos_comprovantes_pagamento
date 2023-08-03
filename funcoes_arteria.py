@@ -1,4 +1,3 @@
-from rsa_archer.archer_instance import ArcherInstance
 import datetime
 import requests
 import json
@@ -736,7 +735,7 @@ def search_(search, page=1):
 
     dict_search = xmltodict.parse(search)
 
-    mensagens(f"{dict_search['Records']['@count']} registros encontrados",
+    util.mensagens(f"{dict_search['Records']['@count']} registros encontrados",
               'ok', bold=True)
     campos = {}
     cont_campo = 0
