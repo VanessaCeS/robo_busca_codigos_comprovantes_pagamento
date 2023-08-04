@@ -366,14 +366,16 @@ class SAPAutomation:
         self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
 
     def buscar_boy(self):
-        tabela = 0
-        autor = 0 
-        while autor < 6:
+        tamanho_tabela = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").RowCount
+        linha = 0
+        while linha < tamanho_tabela:
             try:
-                    
-                if self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(tabela, "COLUMNTEXT") == 'Nome do autor': 
-                    txt = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(tabela, "VALUE")
+
+                if self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'CREATOR'):
+                    txt = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'CREATOR')
                     print("Nome ==> ", txt)
-                i = i + 1
+                linha = linha + 1
             except Exception as e:
                 print("AAAAA ===> ", e)
+
+
