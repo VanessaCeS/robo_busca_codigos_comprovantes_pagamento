@@ -1,18 +1,19 @@
+import base64
+import os
+import re
+import json
+import math
+import util
 import datetime
 import requests
-import json
-from zeep import Client, Settings, Transport
 import xmltodict
-import os
-from dotenv import load_dotenv
-import xml.etree.ElementTree as ET
-import re
-import math
 from time import time
 from requests import Session
+from dotenv import load_dotenv
+import xml.etree.ElementTree as ET
+from zeep import Client, Settings, Transport
 from concurrent.futures import ThreadPoolExecutor
-import util
-
+from rsa_archer.archer_instance import ArcherInstance
 
 
 def adjust_date_and_time_to_arteria(date_audiencia, formato="%d/%m/%Y %H:%M"):
@@ -587,135 +588,135 @@ def extract_user(user):
     }
 
 
-def search_old(xml_search, token=util.get_token(), page_number=1, quantidade=False):
-    load_dotenv('./.env')
-    settings = Settings(strict=False, xml_huge_tree=True)
+# def search_old(xml_search, token=util.get_token(), page_number=1, quantidade=False):
+#     load_dotenv('./.env')
+#     settings = Settings(strict=False, xml_huge_tree=True)
 
-    AMBIENTE = os.getenv('AMBIENTE')
+#     AMBIENTE = os.getenv('AMBIENTE')
 
-    wsdl = f'{os.getenv(f"URL_{AMBIENTE}")}/RSAarcher/ws/search.asmx?wsdl'
+#     wsdl = f'{os.getenv(f"URL_{AMBIENTE}")}/RSAarcher/ws/search.asmx?wsdl'
 
-    client = Client(wsdl=wsdl, settings=settings)
+#     client = Client(wsdl=wsdl, settings=settings)
 
-    search_result = client.service.ExecuteSearch(sessionToken=token, searchOptions=xml_search, pageNumber=page_number)
-    dict_search = xmltodict.parse(search_result)
+#     search_result = client.service.ExecuteSearch(sessionToken=token, searchOptions=xml_search, pageNumber=page_number)
+#     dict_search = xmltodict.parse(search_result)
 
-    if quantidade:
-        return int(dict_search['Records']['@count'])
+#     if quantidade:
+#         return int(dict_search['Records']['@count'])
 
-    campos = {}
-    cont_campo = 0
-    for dado in dict_search['Records']['Metadata']['FieldDefinitions']['FieldDefinition']:
-        campos[cont_campo] = {
-            'guid': dado['@guid'],
-            'alias': dado['@name']
-        }
-        cont_campo += 1
+#     campos = {}
+#     cont_campo = 0
+#     for dado in dict_search['Records']['Metadata']['FieldDefinitions']['FieldDefinition']:
+#         campos[cont_campo] = {
+#             'guid': dado['@guid'],
+#             'alias': dado['@name']
+#         }
+#         cont_campo += 1
 
-    records = []
-    if 'Record' in dict_search['Records']['Record']:
-        colunas = {}
-        if 'Field' in dict_search['Records']['Record']:
-            if '@guid' in dict_search['Records']['Record']['Field']:
-                colunas.update(extrai_dados(campos, dict_search['Records']['Record']['Field']))
-            else:
-                for dado in dict_search['Records']['Record']['Field']:
-                    colunas.update(extrai_dados(campos, dado))
-        if 'Record' in dict_search['Records']['Record']:
-            if type(dict_search['Records']['Record']['Record']) is list:
-                for dado in dict_search['Records']['Record']['Record']:
-                    if 'Field' in dado:
-                        if '@guid' in dado['Field']:
-                            to_update = extrai_dados(campos, dado['Field'])
-                            for k, v in to_update.items():
-                                if k not in colunas:
-                                    colunas[k] = []
-                                colunas[k].append(v)
-                            # colunas.update(extrai_dados(campos, dado['Field']))
-                        else:
-                            for d in dado['Field']:
-                                to_update = extrai_dados(campos, d)
-                                for k, v in to_update.items():
-                                    if k not in colunas:
-                                        colunas[k] = []
-                                    colunas[k].append(v)
-                                # colunas.update(extrai_dados(campos, d))
-            else:
-                if 'Field' in dict_search['Records']['Record']['Record']:
-                    if '@guid' in dict_search['Records']['Record']['Record']['Field']:
-                        colunas.update(extrai_dados(campos, dict_search['Records']['Record']['Record']['Field']))
-                    else:
-                        for dado in dict_search['Records']['Record']['Record']['Field']:
-                            colunas.update(extrai_dados(campos, dado))
-        records.append(colunas)
-    else:
-        if type(dict_search['Records']['Record']) is list:
-            for register in dict_search['Records']['Record']:
-                colunas = {}
-                if 'Field' in register:
-                    if '@guid' in register['Field']:
-                        to_update = extrai_dados(campos, register['Field'])
-                        for k, v in to_update.items():
-                            if k not in colunas:
-                                colunas[k] = []
-                            colunas[k].append(v)
-                        # colunas.update(extrai_dados(campos, register['Field']))
-                    else:
-                        for d in register['Field']:
-                            to_update = extrai_dados(campos, d)
-                            for k, v in to_update.items():
-                                if k not in colunas:
-                                    colunas[k] = []
-                                colunas[k].append(v)
-                            # colunas.update(extrai_dados(campos, d))
-                    # records.append(colunas)
-                if 'Record' in register:
-                    if 'Field' in register['Record']:
-                        if '@guid' in register['Record']['Field']:
-                            to_update = extrai_dados(campos, register['Record']['Field'])
-                            for k, v in to_update.items():
-                                if k not in colunas:
-                                    colunas[k] = []
-                                colunas[k].append(v)
-                            # colunas.update(extrai_dados(campos, register['Record']['Field']))
-                        else:
-                            for d in register['Record']['Field']:
-                                to_update = extrai_dados(campos, d)
-                                for k, v in to_update.items():
-                                    if k not in colunas:
-                                        colunas[k] = []
-                                    colunas[k].append(v)
-                                # colunas.update(extrai_dados(campos, d))
-                        # records.append(colunas)
-                    else:
-                        for dado in register['Record']:
-                            if 'Field' in dado:
-                                if '@guid' in dado['Field']:
-                                    to_update = extrai_dados(campos, dado['Field'])
-                                    for k, v in to_update.items():
-                                        if k not in colunas:
-                                            colunas[k] = []
-                                        colunas[k].append(v)
-                                    # colunas.update(extrai_dados(campos, dado['Field']))
-                                else:
-                                    for d in dado['Field']:
-                                        to_update = extrai_dados(campos, d)
-                                        for k, v in to_update.items():
-                                            if k not in colunas:
-                                                colunas[k] = []
-                                            colunas[k].append(v)
-                                        # colunas.update(extrai_dados(campos, d))
-                records.append(colunas)
-        else:
-            colunas = {}
-            if 'Field' in dict_search['Records']['Record']:
-                if '@guid' in dict_search['Records']['Record']['Field']:
-                    colunas.update(extrai_dados(campos, dict_search['Records']['Record']['Field']))
-                else:
-                    for dado in dict_search['Records']['Record']['Field']:
-                        colunas.update(extrai_dados(campos, dado))
-                records.append(colunas)
-    return records
+#     records = []
+#     if 'Record' in dict_search['Records']['Record']:
+#         colunas = {}
+#         if 'Field' in dict_search['Records']['Record']:
+#             if '@guid' in dict_search['Records']['Record']['Field']:
+#                 colunas.update(extrai_dados(campos, dict_search['Records']['Record']['Field']))
+#             else:
+#                 for dado in dict_search['Records']['Record']['Field']:
+#                     colunas.update(extrai_dados(campos, dado))
+#         if 'Record' in dict_search['Records']['Record']:
+#             if type(dict_search['Records']['Record']['Record']) is list:
+#                 for dado in dict_search['Records']['Record']['Record']:
+#                     if 'Field' in dado:
+#                         if '@guid' in dado['Field']:
+#                             to_update = extrai_dados(campos, dado['Field'])
+#                             for k, v in to_update.items():
+#                                 if k not in colunas:
+#                                     colunas[k] = []
+#                                 colunas[k].append(v)
+#                             # colunas.update(extrai_dados(campos, dado['Field']))
+#                         else:
+#                             for d in dado['Field']:
+#                                 to_update = extrai_dados(campos, d)
+#                                 for k, v in to_update.items():
+#                                     if k not in colunas:
+#                                         colunas[k] = []
+#                                     colunas[k].append(v)
+#                                 # colunas.update(extrai_dados(campos, d))
+#             else:
+#                 if 'Field' in dict_search['Records']['Record']['Record']:
+#                     if '@guid' in dict_search['Records']['Record']['Record']['Field']:
+#                         colunas.update(extrai_dados(campos, dict_search['Records']['Record']['Record']['Field']))
+#                     else:
+#                         for dado in dict_search['Records']['Record']['Record']['Field']:
+#                             colunas.update(extrai_dados(campos, dado))
+#         records.append(colunas)
+#     else:
+#         if type(dict_search['Records']['Record']) is list:
+#             for register in dict_search['Records']['Record']:
+#                 colunas = {}
+#                 if 'Field' in register:
+#                     if '@guid' in register['Field']:
+#                         to_update = extrai_dados(campos, register['Field'])
+#                         for k, v in to_update.items():
+#                             if k not in colunas:
+#                                 colunas[k] = []
+#                             colunas[k].append(v)
+#                         # colunas.update(extrai_dados(campos, register['Field']))
+#                     else:
+#                         for d in register['Field']:
+#                             to_update = extrai_dados(campos, d)
+#                             for k, v in to_update.items():
+#                                 if k not in colunas:
+#                                     colunas[k] = []
+#                                 colunas[k].append(v)
+#                             # colunas.update(extrai_dados(campos, d))
+#                     # records.append(colunas)
+#                 if 'Record' in register:
+#                     if 'Field' in register['Record']:
+#                         if '@guid' in register['Record']['Field']:
+#                             to_update = extrai_dados(campos, register['Record']['Field'])
+#                             for k, v in to_update.items():
+#                                 if k not in colunas:
+#                                     colunas[k] = []
+#                                 colunas[k].append(v)
+#                             # colunas.update(extrai_dados(campos, register['Record']['Field']))
+#                         else:
+#                             for d in register['Record']['Field']:
+#                                 to_update = extrai_dados(campos, d)
+#                                 for k, v in to_update.items():
+#                                     if k not in colunas:
+#                                         colunas[k] = []
+#                                     colunas[k].append(v)
+#                                 # colunas.update(extrai_dados(campos, d))
+#                         # records.append(colunas)
+#                     else:
+#                         for dado in register['Record']:
+#                             if 'Field' in dado:
+#                                 if '@guid' in dado['Field']:
+#                                     to_update = extrai_dados(campos, dado['Field'])
+#                                     for k, v in to_update.items():
+#                                         if k not in colunas:
+#                                             colunas[k] = []
+#                                         colunas[k].append(v)
+#                                     # colunas.update(extrai_dados(campos, dado['Field']))
+#                                 else:
+#                                     for d in dado['Field']:
+#                                         to_update = extrai_dados(campos, d)
+#                                         for k, v in to_update.items():
+#                                             if k not in colunas:
+#                                                 colunas[k] = []
+#                                             colunas[k].append(v)
+#                                         # colunas.update(extrai_dados(campos, d))
+#                 records.append(colunas)
+#         else:
+#             colunas = {}
+#             if 'Field' in dict_search['Records']['Record']:
+#                 if '@guid' in dict_search['Records']['Record']['Field']:
+#                     colunas.update(extrai_dados(campos, dict_search['Records']['Record']['Field']))
+#                 else:
+#                     for dado in dict_search['Records']['Record']['Field']:
+#                         colunas.update(extrai_dados(campos, dado))
+#                 records.append(colunas)
+#     return records
 
 
 def search_(search, page=1):
@@ -1128,6 +1129,37 @@ def get_relacionamento_processo(app, record_id, subf_field_name):
     if record_id:
         record = archer_instance.get_record(record_id)
         return record.get_field_content(subf_field_name)
+    
+def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id, solicitante_nome, id_proceso, name):
+        nome = name.replace(" ", '')
+        diretorio = 'C:\\Users\\Costa e Silva\\Documents\\SAP\\SAP GUI'
+        arquivos_encontrados = []
+
+        for nome_arquivo in os.listdir(diretorio):
+            if nome_arquivo.startswith(nome):
+                arquivos_encontrados.append(nome_arquivo)
+
+        arquivo = f"{diretorio}\\{nome_arquivo}"
+        arquivo_base_64 = transformar_arquivo_para_base64(arquivo)
+        id = archer_instance.post_attachment(arquivo, arquivo_base_64)
+        print("ID ==>> ", id)
+
+        dados_update = {"Solicitante": {"GroupList": [{'Id': f'{solicitante_id}'}]}, 
+                                            "Responsável Pagamento no CS": {"UserList": [{'Id': '3560'}]},
+                                            "Processo" : [f"{id_proceso}"],
+                                            "Anexo Recibo/Guia": [f"{id}"],
+                                            "Pagamento": f"{id_sistema_pagamento}"
+                                            }
+        print("DADOS --> ", dados_update)
+        retorno = cadastrar_arteria(dados_update, "Recibo")
+        print("AQUI ==> ", retorno)
+
+def transformar_arquivo_para_base64( nome_arquivo):
+        with open(nome_arquivo, "rb") as arquivo:
+            dados = arquivo.read()
+            dados_base64 = base64.b64encode(dados)
+            return dados_base64.decode("utf-8") 
+
 
 
 

@@ -1,16 +1,15 @@
-import time
-import traceback
-
-import win32com.client
-import subprocess
-from time import sleep
-import sys
 import os
-from dotenv import load_dotenv
+import sys
+import time
+import base64
+import traceback
+import subprocess
+import win32com.client
+import funcoes_arteria
+from time import sleep
 from bs4 import BeautifulSoup
-
+from dotenv import load_dotenv
 load_dotenv('.env')
-
 
 class SAPAutomation:
     def __init__(self):
@@ -349,33 +348,52 @@ class SAPAutomation:
             print(traceback.print_exc())
 
 
-    def buscar_comprovante(self):
+    def buscar_comprovante(self ,id_sistema_pagamento, solicitante_id, solicitante_nome, id_proceso):
         try:
+            self.verifica_sap("wnd[0]/titl/shellcont/shell").pressButton("%GOS_TOOLBOX")
             self.verifica_sap("wnd[0]/shellcont/shell").pressButton("VIEW_ATTA")
-            self.buscar_boy()
+
+            self.buscar_arquivos_tabela(id_sistema_pagamento, solicitante_id,solicitante_nome , id_proceso)
+            
             self.verifica_sap("wnd[1]/tbar[0]/btn[0]").press()
             self.verifica_sap("wnd[0]/shellcont").close()
             self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
         except Exception as e:
             self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
-            print("AAAAAAAAAAAAAA => ", e)
+            print("Erro ao buscar comprovante => ", e)
         
 
     def voltar_menu_principal(self):
         self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
         self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
 
-    def buscar_boy(self):
+    def buscar_arquivos_tabela(self, id_sistema_pagamento, solicitante_id,solicitante_nome, id_proceso):
         tamanho_tabela = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").RowCount
         linha = 0
+
         while linha < tamanho_tabela:
             try:
-
                 if self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'CREATOR'):
-                    txt = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'CREATOR')
-                    print("Nome ==> ", txt)
+                    autor = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'CREATOR')
+                    if autor not in os.getenv("users_doc_negado"):
+                        tipo_arquivo = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'BITM_ICON')
+                        if tipo_arquivo != '@IT\QAdobe Acrobat Reader@' :
+                            dados_update = {"Observação Costa e Silva": "Há comprovante anexado, mas não está na formato pdf."}
+                            funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', id_sistema_pagamento)
+                        else:
+                            name = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'BITM_DESCR').replace(" ", '')
+                            self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").selectedRows = "0"
+                            self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").doubleClickCurrentCell()
+                            print("Name = ", name)
+                            funcoes_arteria.enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id, solicitante_nome,id_proceso, name)
                 linha = linha + 1
             except Exception as e:
-                print("AAAAA ===> ", e)
+                print(traceback.print_exc())
+                print("Erro ao buscar nome ", e)
+
+    
+
+
+
 
 

@@ -15,8 +15,12 @@ search_xml = """<SearchReport id="15461" name="REL_BUSCADOCCOMPENSACAO">
     <DisplayField>16040</DisplayField>
     <DisplayField>25763</DisplayField>
     <DisplayField>25056</DisplayField>
+    <DisplayField>20560</DisplayField>
+    <DisplayField>17933</DisplayField>
+    <DisplayField>21399</DisplayField>
+    <DisplayField>18982</DisplayField>
   </DisplayFields>
-  <PageSize>999999</PageSize>
+  <PageSize>50</PageSize>
   <IsResultLimitPercent>False</IsResultLimitPercent>
   <Criteria>
     <Keywords />
