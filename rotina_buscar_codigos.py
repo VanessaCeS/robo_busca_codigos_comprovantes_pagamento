@@ -9,7 +9,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from classe_sap import SAPAutomation
 from leitura_relatorios_arteria import search_xml, get_dados_pagamentos_codigo_comprovantes
-
+from time import time
 sap = SAPAutomation()
 load_dotenv() 
 url = {
@@ -28,8 +28,7 @@ def rotina_buscar_doc_compencacao_sap(pagamentos):
     sap.login_sap_gui()
     for pagamento in pagamentos:
             rotina_buscar_codigos_sap(pagamento)
-#  '490256*', '490502*','490503*'
-# 490257, 490558
+
 def rotina_buscar_codigos_sap(pagamento):
     erros = []
     try:
@@ -84,6 +83,7 @@ def rotina_buscar_codigos_sap(pagamento):
                                                 pagamento['Data Estimada do Recebimento do Comprovante no C&S'],
                                                 pagamento
                                                 )
+                time(5)
     except Exception as e:
         print("ERROR", e)
         erros.append(traceback.print_exc())
@@ -176,6 +176,7 @@ def mandar_banco_de_dados(pagamento):
     colunas =  ['id_sistema_pagamento', 'pagamento_id', 'numero_preeditado', 'data_exercicio', 'mod_pagamento', 'ramo', 'numero_scpjud', 'numero_ocorrencia', 'numero_sinistro', 'doc', 'situacao_pagamento', 'resp_pagamento_id', 'resp_pagamento_nome', 'produto', 'id_processo', 'id_baj', 'id_favorecido', 'solicitante_id', 'solicitante_nome', 'idlg']
 
     util.execute_sql_integra(pagamento['ID do Sistema - Pagamento'], dados, colunas)
+    time(5)
     
 
 def buscar_codigo_documento_sap(parametro_doc, cod_empresa, dt_recebimento_comprovante, pagamento):
@@ -239,5 +240,6 @@ def status_pagamento(id_sistema_pagamento):
             data = pegar_data()
             dados_update = {"Observação Costa e Silva": ""}
             funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', id_sistema_pagamento)
+        time(5)
 
 rotina_sap()
