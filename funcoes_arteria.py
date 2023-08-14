@@ -1130,38 +1130,36 @@ def get_relacionamento_processo(app, record_id, subf_field_name):
         record = archer_instance.get_record(record_id)
         return record.get_field_content(subf_field_name)
     
-def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id, solicitante_nome, id_proceso, name):
+def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id,  id_proceso, name, ramo):
         nome = name.replace(" ", '')
-        diretorio = 'C:\\Users\\Costa e Silva\\Documents\\SAP\\SAP GUI'
-        arquivos_encontrados = []
-
-        for nome_arquivo in os.listdir(diretorio):
-            if nome_arquivo.startswith(nome):
-                arquivos_encontrados.append(nome_arquivo)
+        diretorio =  'C:\\Users\\Costa e Silva\\Documents\\SAP\\SAP GUI'
+        nome_arquivo = pegar_arquivo(nome,diretorio)
 
         arquivo = f"{diretorio}\\{nome_arquivo}"
         arquivo_base_64 = transformar_arquivo_para_base64(arquivo)
         id = archer_instance.post_attachment(arquivo, arquivo_base_64)
-        print("ID ==>> ", id)
-
         dados_update = {"Solicitante": {"GroupList": [{'Id': f'{solicitante_id}'}]}, 
                                             "Responsável Pagamento no CS": {"UserList": [{'Id': '3560'}]},
                                             "Processo" : [f"{id_proceso}"],
                                             "Anexo Recibo/Guia": [f"{id}"],
                                             "Pagamento": f"{id_sistema_pagamento}"
                                             }
-        print("DADOS --> ", dados_update)
-        retorno = cadastrar_arteria(dados_update, "Recibo")
-        print("AQUI ==> ", retorno)
+        cadastrar_arteria(dados_update, "Recibo")
+        if ramo != '66 - HABITACIONAL':
+            avanca_etapa_wf(id_sistema_pagamento,'ENVIAR RECIBO','Recibo')
 
+
+def pegar_arquivo(nome,diretorio):
+    prefixo = nome
+    arquivos = os.listdir(diretorio)
+    arquivos_filtrados = [arquivo for arquivo in arquivos if arquivo.startswith(prefixo)]
+    if arquivos_filtrados:
+        arquivo_mais_novo = max(arquivos_filtrados, key=lambda arquivo: os.path.getmtime(os.path.join(diretorio, arquivo)))
+        print("Arquivo mais novo:", arquivo_mais_novo)
+        return arquivo_mais_novo
+        
 def transformar_arquivo_para_base64( nome_arquivo):
         with open(nome_arquivo, "rb") as arquivo:
             dados = arquivo.read()
             dados_base64 = base64.b64encode(dados)
             return dados_base64.decode("utf-8") 
-
-
-
-
-
-

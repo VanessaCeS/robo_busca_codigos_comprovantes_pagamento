@@ -1,9 +1,10 @@
+from datetime import datetime
 import os
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from funcoes_arteria import cadastrar_arteria
 from classe_sap import SAPAutomation
-
 sap = SAPAutomation()
 load_dotenv() 
 url = {
@@ -12,7 +13,7 @@ url = {
 }
 url = url[os.getenv("AMBIENTE")]
 
-def login_scpjud(n_scpjud, n_ocorrencia, n_sinistro_processo):
+def login_scpjud(n_scpjud, n_ocorrencia, n_sinistro_processo, id_sistema_pagamento):
     try:
         login_url = os.getenv("scpjud_link")
         username = os.getenv("USER_SCPJUD_PROD")
@@ -41,8 +42,12 @@ def login_scpjud(n_scpjud, n_ocorrencia, n_sinistro_processo):
         return pegar_dados_scpjud(n_scpjud, n_ocorrencia, n_sinistro_processo, session)
     
     except Exception as e:
+        data = pegar_data()
+        dados_update = {"IDLG": '', "Observação Costa e Silva": f"Sinistro não encontrado no SCPJUD - {data.day}/{data.month} - {data.strftime('%X')[:-3]}"}
+        cadastrar_arteria(dados_update, 'Pagamento', id_sistema_pagamento)
         print("Erro no SCPJUD", e)
-        sap.voltar_menu_principal()
+        n_idlg = ''
+        return n_idlg
 
 def pegar_dados_scpjud(n_scpjud, n_ocorrencia, n_sinistro_processo, session):
     n_scpjud = n_scpjud.strip()
@@ -58,7 +63,11 @@ def pegar_dados_scpjud(n_scpjud, n_ocorrencia, n_sinistro_processo, session):
         
     scpjud_detalhes_link = os.getenv("scpjud_detalhamento")
     busca_idlg = session.get(scpjud_detalhes_link+"APOL_SINISTRO="+n_sinistro_processo+"&OCORR_HISTORICO="+n_ocorrencia+"&OPERACAO_MOVIMENTO="+n_operacao+"&PROCESSO_JUDICIAL="+n_scpjud)
+    
     dados_scpjud = busca_idlg.json()
+    print(dados_scpjud)
     n_idlg = dados_scpjud['IDLG'][0].strip()
-
     return n_idlg
+
+def pegar_data(): 
+    return datetime.now()

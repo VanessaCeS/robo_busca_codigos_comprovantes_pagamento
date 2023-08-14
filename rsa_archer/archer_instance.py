@@ -595,17 +595,20 @@ class ArcherInstance:
         except Exception as e:
             ''  # log.info("Function delete_content_record didn't worked, %s", e)
 
+    
+        
     def post_attachment(self, name, base64_string):
         """
 		:param name: Name of the attachment
 		:param base64_string: File in base64_string
 		:return:
 		"""
+        name = self.nome_sem_caminho_arquivo(name)
         api_url = f"{self.api_url_base}core/content/attachment"
         post_header = dict(self.header)
         post_header["X-Http-Method-Override"] = "POST"
         body = json.dumps({"AttachmentName": name, "AttachmentBytes": base64_string})
-
+        
         try:
             response = requests.post(api_url, headers=post_header, data=body)
             data = response.json()
@@ -616,6 +619,14 @@ class ArcherInstance:
         except Exception as e:
             ''  # log.error("Function post_attachment didn't work, %s; Response content: %s", e, response.content)
 
+    def nome_sem_caminho_arquivo(self, nome):
+        prefixo = "C:\\Users\\Costa e Silva\\Documents\\SAP\\SAP GUI\\"
+        if nome.startswith(prefixo):
+            novo_nome = nome[len(prefixo):]
+            return novo_nome
+        else:
+            return nome
+        
     def update_content_record(self, updated_json, record_id):
         """LevelID is an application
 		:param updated_json: see function create_content_record()

@@ -68,8 +68,7 @@ def get_token(user='integra.api'):
     return result[0]['token']
 
 
-def execute_sql_integra(id_sistema_pagamento, dados):
-    print("dados ==>> ", dados)
+def execute_sql_integra(id_sistema_pagamento, dados, nomes):
     conn = pymssql.connect(server=server, database=database, user=username, password=password)
     cursor = conn.cursor()
 
@@ -78,41 +77,36 @@ def execute_sql_integra(id_sistema_pagamento, dados):
 
     if cursor.fetchall():
         cursor.execute("SELECT * FROM Integra.dbo.comprovantes_sap WHERE id_sistema_pagamento = %s ", (id_sistema_pagamento,))
+        for i in range(len(dados)):
+            if dados[i] == '':
+                dados[i] = None
 
         id_sistema = cursor.fetchone()
-        print('id_sistema == ', id_sistema)
         if id_sistema is not None:
-            for i in range(len(dados)):
-                if dados[i] == '':
-                    dados[i] = None
-        try:
-            nomes = ['id_sistema_pagamento', 'pagamento_id', 'numero_preeditado', 'data_exercicio', 'mod_pagamento', 'ramo', 'numero_scpjud', 'numero_ocorrencia', 'numero_sinistro', 'doc', 'situacao_pagamento', 'resp_pagamento_id', 'resp_pagamento_nome', 'produto', 'id_processo', 'id_baj', 'id_favorecido', 'solicitante_id', 'solicitante_nome', 'idlg']
-            set_clause = ', '.join([f"{col} = %s" for col in nomes])
-            print("SET BOYY ==> ", set_clause)
-            query = f"UPDATE Integra.dbo.comprovantes_sap SET {set_clause} WHERE id_sistema_pagamento = %s"
-            valores = tuple(dados) + (id_sistema_pagamento,)
-            print("VALORES ==> ", valores)
-            print("QUERY ==> ", query)
-            cursor.execute(query, valores)
-            conn.commit()
+            try:
+                set_clause = ', '.join([f"{col} = %s" for col in nomes])
+                query = f"UPDATE Integra.dbo.comprovantes_sap SET {set_clause} WHERE id_sistema_pagamento = %s"
+                valores = tuple(dados) + (id_sistema_pagamento,)
+                cursor.execute(query, valores)
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print("E ==>> ", e)
+                print("Exec ==>> ", traceback.print_exc())
 
-            
-            conn.close()
-        except Exception as e:
-            print("E ==>> ", e)
-            print("Exec ==>> ", traceback.print_exc())
+        else:
+            try:
+                valores = tuple(dados)
+                colunas = ', '.join(nomes)
+                placeholders = ', '.join(['%s' for _ in nomes])
+                query = f"INSERT INTO Integra.dbo.comprovantes_sap ({colunas}) VALUES ({placeholders})"
+                cursor.execute(query, valores)
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print("Error ==> ", e)
+                print("Caminho ==> ", traceback.print_exc())
 
-    else:
-            nomes = ['id_sistema_pagamento', 'pagamento_id', 'numero_preeditado', 'data_exercicio', 'mod_pagamento', 'cod_empresa', 'numero_scpjud', 'numero_ocorrencia', 'numero_sinistro', 'doc', 'situacao_pagamento', 'resp_pagamento_id', 'resp_pagamento_nome', 'produto', 'id_processo', 'id_baj', 'id_favorecido', 'solicitante_id', 'solicitante_nome']
-            coluna_valor_dict = {nome: valor for nome, valor in zip(nomes, dados)}
-            query = ("INSERT INTO Integra.dbo.comprovantes_sap "
-                    "(id_sistema_pagamento, pagamento_id, numero_preeditado, data_exercicio, mod_pagamento, ramo, numero_scpjud, numero_ocorrencia, numero_sinistro, doc, situacao_pagamento, resp_pagamento_id, resp_pagamento_nome, produto, id_processo, id_baj, id_favorecido, solicitante_id, solicitante_nome) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-            valores = tuple(coluna_valor_dict[col] for col in nomes)
-            cursor.execute(query, valores)
-        
-            conn.commit()
-            conn.close()
 
 # ==============================================================================
 #   Funções do Banco de Dados

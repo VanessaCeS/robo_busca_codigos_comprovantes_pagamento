@@ -20,7 +20,7 @@ search_xml = """<SearchReport id="15461" name="REL_BUSCADOCCOMPENSACAO">
     <DisplayField>21399</DisplayField>
     <DisplayField>18982</DisplayField>
   </DisplayFields>
-  <PageSize>50</PageSize>
+  <PageSize>1250</PageSize>
   <IsResultLimitPercent>False</IsResultLimitPercent>
   <Criteria>
     <Keywords />
@@ -103,8 +103,10 @@ search_xml = """<SearchReport id="15461" name="REL_BUSCADOCCOMPENSACAO">
 
 def get_dados_pagamentos_codigo_comprovantes(search_xml):
     dados = search(search_xml, page=1, quantidade=False)
+    ids = []
+    for i in range(len(dados)):
+        ids.append(dados[i]['ID da Aplicação - Pagamento'])
     return dados
 
-
-# a = get_dados_pagamentos_codigo_comprovantes(search_xml)
+# get_dados_pagamentos_codigo_comprovantes(search_xml)
 # print(a)
