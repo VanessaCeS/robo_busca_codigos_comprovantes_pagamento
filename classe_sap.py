@@ -348,12 +348,12 @@ class SAPAutomation:
             print(traceback.print_exc())
 
 
-    def buscar_comprovante(self ,id_sistema_pagamento, solicitante_id, solicitante_nome, id_proceso):
+    def buscar_comprovante(self ,id_sistema_pagamento, solicitante_id,  id_proceso, ramo):
         try:
             self.verifica_sap("wnd[0]/titl/shellcont/shell").pressButton("%GOS_TOOLBOX")
             self.verifica_sap("wnd[0]/shellcont/shell").pressButton("VIEW_ATTA")
 
-            self.buscar_arquivos_tabela(id_sistema_pagamento, solicitante_id,solicitante_nome , id_proceso)
+            self.buscar_arquivos_tabela(id_sistema_pagamento, solicitante_id , id_proceso, ramo)
             
             self.verifica_sap("wnd[1]/tbar[0]/btn[0]").press()
             self.verifica_sap("wnd[0]/shellcont").close()
@@ -367,10 +367,9 @@ class SAPAutomation:
         self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
         self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
 
-    def buscar_arquivos_tabela(self, id_sistema_pagamento, solicitante_id,solicitante_nome, id_proceso):
+    def buscar_arquivos_tabela(self, id_sistema_pagamento, solicitante_id, id_proceso, ramo):
         tamanho_tabela = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").RowCount
         linha = 0
-
         while linha < tamanho_tabela:
             try:
                 if self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'CREATOR'):
@@ -385,11 +384,13 @@ class SAPAutomation:
                             self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").selectedRows = "0"
                             self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").doubleClickCurrentCell()
                             print("Name = ", name)
-                            funcoes_arteria.enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id, solicitante_nome,id_proceso, name)
+                            funcoes_arteria.enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id, id_proceso, name, ramo)
+                        break
                 linha = linha + 1
             except Exception as e:
                 print(traceback.print_exc())
                 print("Erro ao buscar nome ", e)
+                break
 
     
 
