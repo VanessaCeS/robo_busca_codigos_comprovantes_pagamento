@@ -1132,7 +1132,8 @@ def get_relacionamento_processo(app, record_id, subf_field_name):
     
 def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id,  id_proceso, name, ramo):
         nome = name.replace(" ", '')
-        diretorio =  'C:\\Users\\Costa e Silva\\Documents\\SAP\\SAP GUI'
+        base_projeto = os.environ.get('base_projeto')
+        diretorio =  f'{base_projeto}SAP\\SAP GUI'
         nome_arquivo = pegar_arquivo(nome,diretorio)
 
         arquivo = f"{diretorio}\\{nome_arquivo}"
