@@ -32,7 +32,6 @@ def rotina_buscar_doc_compencacao_sap(pagamentos):
 def rotina_buscar_codigos_sap(pagamento):
     erros = []
     try:
-        if pagamento['ID da Aplicação - Pagamento'] in ['486385','486441','4888999']:
             if pagamento.get('Módulo de Pagamento'):
                 if pagamento['Módulo de Pagamento'][0] == 'SAP':
                         if pagamento['Número do Pré Editado'] != "":
