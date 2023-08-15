@@ -266,5 +266,5 @@ def busca_motivo_recusa():
                 cod = recusa_pagamento[cod:cod+2]
                 motivo_full += f'{cod}({motivorecusapag.codrecusa.get(cod, "")})\n'
             motivo_full = motivo_full.rstrip('\n')
-            return (motivo_full or None)    
+            return (motivo_full or '')    
 rotina_sap()
