@@ -1149,7 +1149,7 @@ def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id,  id_proceso
                                             }
         cadastrar_arteria(dados_update, "Recibo")
         if ramo != '66 - HABITACIONAL':
-            avanca_etapa_wf(id_sistema_pagamento,'ENVIAR RECIBO','Recibo')
+            avanca_etapa_wf(id_sistema_pagamento,"Próxima Etapa",'Recibo')
 
 
 def pegar_arquivo(nome,diretorio):

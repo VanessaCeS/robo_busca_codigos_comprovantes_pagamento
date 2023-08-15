@@ -65,7 +65,6 @@ def pegar_dados_scpjud(n_scpjud, n_ocorrencia, n_sinistro_processo, session):
     busca_idlg = session.get(scpjud_detalhes_link+"APOL_SINISTRO="+n_sinistro_processo+"&OCORR_HISTORICO="+n_ocorrencia+"&OPERACAO_MOVIMENTO="+n_operacao+"&PROCESSO_JUDICIAL="+n_scpjud)
     
     dados_scpjud = busca_idlg.json()
-    print(dados_scpjud)
     n_idlg = dados_scpjud['IDLG'][0].strip()
     return n_idlg
 

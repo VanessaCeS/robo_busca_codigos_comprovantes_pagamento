@@ -3,18 +3,18 @@ import re
 import util
 import scpjud
 import traceback
-import funcoes_arteria
 import codempresa
+import funcoes_arteria
+import motivorecusapag
 from datetime import datetime
 from dotenv import load_dotenv
 from classe_sap import SAPAutomation
 from leitura_relatorios_arteria import search_xml, get_dados_pagamentos_codigo_comprovantes
-from time import time
 sap = SAPAutomation()
 load_dotenv() 
+
 url = {
     "PROD": "https://websites.caixaseguradora.com.br",
-    # "HM": "https://websiteshm.caixaseguradora.com.br",
 }
 url = url[os.getenv("AMBIENTE")]
 padrao_regex = r".*411$"
@@ -32,6 +32,7 @@ def rotina_buscar_doc_compencacao_sap(pagamentos):
 def rotina_buscar_codigos_sap(pagamento):
     erros = []
     try:
+        if pagamento['ID da Aplicação - Pagamento'] in ['486385','486441','4888999']:
             if pagamento.get('Módulo de Pagamento'):
                 if pagamento['Módulo de Pagamento'][0] == 'SAP':
                         if pagamento['Número do Pré Editado'] != "":
@@ -58,6 +59,7 @@ def rotina_buscar_codigos_sap(pagamento):
                             data = pegar_data()
                             dados_update = {"Observação Costa e Silva": f"IDLG indisponível até a presente data - {data.day}/{data.month} - {data.strftime('%X')[:-3]}"}
                             funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', pagamento["ID do Sistema - Pagamento"])
+                        sap.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
                         pass
                     else:
                         dados_update = {'IDLG': f'{pagamento["IDLG"]}'}
@@ -83,7 +85,7 @@ def rotina_buscar_codigos_sap(pagamento):
                                                 pagamento['Data Estimada do Recebimento do Comprovante no C&S'],
                                                 pagamento
                                                 )
-                time(5)
+                
     except Exception as e:
         print("ERROR", e)
         erros.append(traceback.print_exc())
@@ -176,7 +178,7 @@ def mandar_banco_de_dados(pagamento):
     colunas =  ['id_sistema_pagamento', 'pagamento_id', 'numero_preeditado', 'data_exercicio', 'mod_pagamento', 'ramo', 'numero_scpjud', 'numero_ocorrencia', 'numero_sinistro', 'doc', 'situacao_pagamento', 'resp_pagamento_id', 'resp_pagamento_nome', 'produto', 'id_processo', 'id_baj', 'id_favorecido', 'solicitante_id', 'solicitante_nome', 'idlg']
 
     util.execute_sql_integra(pagamento['ID do Sistema - Pagamento'], dados, colunas)
-    time(5)
+    
     
 
 def buscar_codigo_documento_sap(parametro_doc, cod_empresa, dt_recebimento_comprovante, pagamento):
@@ -210,6 +212,7 @@ def achar_comprovantes(id_pagamento_sap, cod_empresa, id_sistema_pagamento, soli
             sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").clickCurrentCell()
             sap.buscar_comprovante(id_sistema_pagamento,solicitante_id,  id_proceso, ramo)
             
+
         status_pagamento(id_sistema_pagamento)
         sap.voltar_menu_principal()
 
@@ -220,26 +223,48 @@ def achar_comprovantes(id_pagamento_sap, cod_empresa, id_sistema_pagamento, soli
 def status_pagamento(id_sistema_pagamento):
         sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").currentCellColumn = "BUTXT"
         txt_lcto = sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").GetCellValue(0,'BUTXT').upper()
-        print("status pagamento", txt_lcto)
         util.execute_sql_integra(id_sistema_pagamento, [txt_lcto.lower()], ['situacao_pagamento'])
 
         if txt_lcto != "" and txt_lcto != "PAGAMENTO EFETUADO":
             sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").selectedRows = "0"
             sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").contextMenu()
             sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").selectContextMenuItem("&DETAIL")
-            
-            sap.verifica_sap("wnd[1]/usr/cntlGRID/shellcont/shell").currentCellRow = 56
-            sap.verifica_sap("wnd[1]/usr/cntlGRID/shellcont/shell").firstVisibleRow = 49
-            sap.verifica_sap("wnd[1]/usr/cntlGRID/shellcont/shell").selectedRows = "56"
 
+            motivo = busca_motivo_recusa()
             data = pegar_data()
-            dados_update = {"Observação Costa e Silva": f"{txt_lcto.capitalize()} - {data.day}/{data.month} - {data.strftime('%X')[:-3]}"}
+            dados_update = {"Observação Costa e Silva": f"{txt_lcto} - {motivo} - <br> {data.day}/{data.month} - {data.strftime('%X')[:-3]}"}
             funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', id_sistema_pagamento)
             sap.verifica_sap("wnd[1]").close()
         else:
             data = pegar_data()
             dados_update = {"Observação Costa e Silva": ""}
             funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', id_sistema_pagamento)
-        time(5)
+        
+def busca_motivo_recusa():
+        value_motivo = False
+        i = 0
+        while not value_motivo:
+            try:
+                if sap.verifica_sap("wnd[1]/usr/cntlGRID/shellcont/shell").GetCellValue(i, "COLUMNTEXT") == 'Ref.bancária':
+                    recusa_pagamento = sap.verifica_sap("wnd[1]/usr/cntlGRID/shellcont/shell").GetCellValue(i, "VALUE")
+                    value_motivo = True
+                    break
+                elif sap.verifica_sap("wnd[1]/usr/cntlGRID/shellcont/shell").GetCellValue(i, "COLUMNTEXT") != 'Ref.bancária':
+                    i+=1
+                else:
+                    print('Campo texto de motivo da recusa do pagamento não encontrado')
+                    break
+                                
+            except Exception as e:
+                print('Erro em pegar motivo da recusa', e)
+                value_motivo = True
+                recusa_pagamento = ''
 
+        if recusa_pagamento and recusa_pagamento != '':
+            motivo_full = ''
+            for cod in range(0, len(recusa_pagamento), 2):
+                cod = recusa_pagamento[cod:cod+2]
+                motivo_full += f'{cod}({motivorecusapag.codrecusa.get(cod, "")})\n'
+            motivo_full = motivo_full.rstrip('\n')
+            return (motivo_full or None)    
 rotina_sap()
