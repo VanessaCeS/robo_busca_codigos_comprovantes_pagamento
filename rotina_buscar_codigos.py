@@ -79,6 +79,7 @@ def rotina_buscar_codigos_sap(pagamento):
             if 'IDLG' in pagamento and pagamento["IDLG"] == '':
                 pass
             else:
+                print("pagamento ==>> ", pagamento)
                 buscar_codigo_documento_sap(os.getenv("parametro_doc"),
                                                 pagamento['cod_empresa'],
                                                 pagamento['Data Estimada do Recebimento do Comprovante no C&S'],
@@ -95,7 +96,7 @@ def pegar_cod_ramo_correto_sap(id_pagamento_sap):
     return cod_ramo
 
 def abrir_pedido_sap(id_pagamento_sap):
-    if re.match(padrao_regex, os.getenv("sap_username")):
+    # if re.match(padrao_regex, os.getenv("sap_username")):
         sap_busca()
         sap.verifica_sap("wnd[0]/mbar/menu[0]/menu[0]").select()
         sap.verifica_sap("wnd[1]/usr/subSUB0:SAPLMEGUI:0003/ctxtMEPO_SELECT-EBELN").text = f"{id_pagamento_sap}"
@@ -105,12 +106,14 @@ def abrir_pedido_sap(id_pagamento_sap):
 #Função responsável por buscar o Doc_Compensação no SAP
 def sap_busca():
     try:
-        if re.match(padrao_regex, os.getenv("sap_username")):
-            sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "F00002"
-            sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00002")
-        else:
-            sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "F00005"
-            sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00005")
+        # if re.match(padrao_regex, os.getenv("sap_username")):
+            # sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "F00002"
+            # sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00002")
+            sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "F00004"
+            sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00004")
+        # else:
+        #     sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "F00005"
+        #     sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00005")
     except Exception as e:
         print("Erro ao iniciar busca ", e)
 
@@ -181,7 +184,9 @@ def mandar_banco_de_dados(pagamento):
     
 
 def buscar_codigo_documento_sap(parametro_doc, cod_empresa, dt_recebimento_comprovante, pagamento):
-        sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00003")
+        # sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00003")
+        sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00002")
+
         sap.verifica_sap("wnd[0]/usr/ctxtP_VARIA").text = parametro_doc
         sap.verifica_sap("wnd[0]/usr/ctxtS_BUKRS-LOW").text = cod_empresa
         sap.verifica_sap("wnd[0]/usr/txtS_GJAHR-LOW").text = dt_recebimento_comprovante[-4:]
