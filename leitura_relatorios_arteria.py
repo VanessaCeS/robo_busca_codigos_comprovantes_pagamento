@@ -19,13 +19,14 @@ search_xml = """<SearchReport id="15461" name="REL_BUSCADOCCOMPENSACAO">
     <DisplayField>17933</DisplayField>
     <DisplayField>21399</DisplayField>
     <DisplayField>18982</DisplayField>
+    <DisplayField>15994</DisplayField>
   </DisplayFields>
   <PageSize>1250</PageSize>
   <IsResultLimitPercent>False</IsResultLimitPercent>
   <Criteria>
     <Keywords />
     <Filter>
-      <OperatorLogic>1 AND 2 AND ((3 AND 6) OR (4 AND 5)) AND (7 OR 8) </OperatorLogic>
+      <OperatorLogic>1 AND 2 AND ((3) OR (4 AND 5)) AND (6 OR 7) </OperatorLogic>
       <Conditions>
         <ReferenceFilterCondition>
           <Field>15951</Field>
@@ -66,15 +67,6 @@ search_xml = """<SearchReport id="15461" name="REL_BUSCADOCCOMPENSACAO">
           <IncludeChildren>False</IncludeChildren>
           <Values>
             <Value>91009</Value>
-          </Values>
-        </ValueListFilterCondition>
-        <ValueListFilterCondition>
-          <Field>15994</Field>
-          <Operator>DoesNotContain</Operator>
-          <IsNoSelectionIncluded>False</IsNoSelectionIncluded>
-          <IncludeChildren>False</IncludeChildren>
-          <Values>
-            <Value>66596</Value>
           </Values>
         </ValueListFilterCondition>
         <CurrentDateFilterCondition>

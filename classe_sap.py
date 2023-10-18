@@ -375,15 +375,15 @@ class SAPAutomation:
                 if self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'CREATOR'):
                     autor = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'CREATOR')
                     if autor not in os.getenv("users_doc_negado"):
+
                         tipo_arquivo = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'BITM_ICON')
                         if tipo_arquivo != '@IT\QAdobe Acrobat Reader@' :
                             dados_update = {"Observação Costa e Silva": "Há comprovante anexado, mas não está na formato pdf."}
                             funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', id_sistema_pagamento)
                         else:
-                            name = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'BITM_DESCR').replace(" ", '')
+                            name = self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").GetCellValue(linha,'BITM_DESCR').replace('$', '_')
                             self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").selectedRows = "0"
                             self.verifica_sap("wnd[1]/usr/cntlCONTAINER_0100/shellcont/shell").doubleClickCurrentCell()
-                            print("Name = ", name)
                             funcoes_arteria.enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id, id_proceso, name, ramo)
                         break
                 linha = linha + 1

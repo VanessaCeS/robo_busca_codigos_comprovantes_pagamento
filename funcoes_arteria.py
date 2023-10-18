@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from rsa_archer.archer_instance import ArcherInstance
 
 
+
 def adjust_date_and_time_to_arteria(date_audiencia, formato="%d/%m/%Y %H:%M"):
     given_date = datetime.datetime.strptime(date_audiencia, formato)
     final_date = given_date + datetime.timedelta(hours=3)
@@ -35,10 +36,9 @@ def instancia_arteria(application="", user=None, password=None):
         password = password if password else os.getenv(f'PASSWORD_{AMBIENTE}')
         global archer_instance
         archer_instance = ArcherInstance(os.getenv(f'URL_{AMBIENTE}'),
-                                         os.getenv(f'AMBIENTE_{AMBIENTE}'),
+                                         os.getenv(f'AMBIENTE'),
                                          user,
-                                         password,
-                                         token=""
+                                         password
                                          )
     if application:
         archer_instance.from_application(application)
@@ -1131,14 +1131,14 @@ def get_relacionamento_processo(app, record_id, subf_field_name):
         return record.get_field_content(subf_field_name)
     
 def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id,  id_proceso, name, ramo):
-        nome = name.replace(" ", '')
-        base_projeto = os.environ.get('base_projeto')
         load_dotenv('.env')
-
+        base_projeto = os.environ.get('base_projeto')
+        nome = name.replace('  ','').replace(' ','')
         diretorio =  f'{base_projeto}SAP\\SAP GUI'
         nome_arquivo = pegar_arquivo(nome,diretorio)
-
+        print('name --->> ', nome)
         arquivo = f"{diretorio}\\{nome_arquivo}"
+        
         arquivo_base_64 = transformar_arquivo_para_base64(arquivo)
         id = archer_instance.post_attachment(arquivo, arquivo_base_64)
         dados_update = {"Solicitante": {"GroupList": [{'Id': f'{solicitante_id}'}]}, 
@@ -1153,7 +1153,8 @@ def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id,  id_proceso
 
 
 def pegar_arquivo(nome,diretorio):
-    prefixo = nome
+    prefixo = nome.replace('.PDF','')
+    
     arquivos = os.listdir(diretorio)
     arquivos_filtrados = [arquivo for arquivo in arquivos if arquivo.startswith(prefixo)]
     if arquivos_filtrados:
@@ -1161,7 +1162,7 @@ def pegar_arquivo(nome,diretorio):
         print("Arquivo mais novo:", arquivo_mais_novo)
         return arquivo_mais_novo
         
-def transformar_arquivo_para_base64( nome_arquivo):
+def transformar_arquivo_para_base64(nome_arquivo):
         with open(nome_arquivo, "rb") as arquivo:
             dados = arquivo.read()
             dados_base64 = base64.b64encode(dados)
