@@ -98,6 +98,7 @@ def get_dados_pagamentos_codigo_comprovantes(search_xml):
     ids = []
     for i in range(len(dados)):
         ids.append(dados[i]['ID da Aplicação - Pagamento'])
+    print('LEN IDS -->> ', len(ids))
     return dados
 
 # get_dados_pagamentos_codigo_comprovantes(search_xml)

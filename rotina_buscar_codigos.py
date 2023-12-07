@@ -70,7 +70,7 @@ def rotina_buscar_codigos_sap(pagamento):
                         return "Não existe ocorrencia para o pagamento"
             print("pagamento --->> ", pagamento)
             mandar_banco_de_dados(pagamento)
-            if pagamento['DOC. Compensação'] == '' and 'IDLG' not in pagamento:
+            if pagamento['DOC. Compensação'] == '' and 'IDLG' not in pagamento: 
                 data = pegar_data() 
                 dados_update = {"Observação Costa e Silva": f"Sem DOC disponível no SAP até a presente data - {data.day}/{data.month} - {data.strftime('%X')[:-3]}"}
                 funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', pagamento["ID do Sistema - Pagamento"])
@@ -189,7 +189,15 @@ def buscar_codigo_documento_sap(parametro_doc, cod_empresa, dt_recebimento_compr
             sap.verifica_sap("wnd[0]/usr/txtS_ZIDLG-LOW").text = pagamento['IDLG']
 
         sap.verifica_sap("wnd[0]/tbar[1]/btn[8]").press()
-        achar_comprovantes(pagamento['Número do Pré Editado'], cod_empresa, pagamento["ID do Sistema - Pagamento"],pagamento.get('Solicitante')[0]['id'],  pagamento['ID do processo - Robo - Integra'], pagamento['Módulo de Pagamento'][0], pagamento['Ramo'], pagamento['DOC. Compensação'])
+        if pagamento.get('Solicitante') != '':
+            solicitante = pagamento.get('Solicitante')[0]['id']
+        else:
+            solicitante = ''
+            data = pegar_data()
+            dados_update = {"Observação Costa e Silva": f"Não há solicitante associado a esse pagamento - <br> {data.day}/{data.month} - {data.strftime('%X')[:-3]}"}
+            funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', pagamento["ID do Sistema - Pagamento"])
+
+        achar_comprovantes(pagamento['Número do Pré Editado'], cod_empresa, pagamento["ID do Sistema - Pagamento"], solicitante,  pagamento['ID do processo - Robo - Integra'], pagamento['Módulo de Pagamento'][0], pagamento['Ramo'], pagamento['DOC. Compensação'])
 
             
 def achar_comprovantes(id_pagamento_sap, cod_empresa, id_sistema_pagamento, solicitante_id,  id_processo, mod_pagamento, ramo, compesacao):

@@ -1142,10 +1142,10 @@ def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id,  id_proceso
         arquivo_base_64 = transformar_arquivo_para_base64(arquivo)
         id = archer_instance.post_attachment(arquivo, arquivo_base_64)
         dados_update = {"Solicitante": {"GroupList": [{'Id': f'{solicitante_id}'}]}, 
-                                            "Responsável Pagamento no CS": {"UserList": [{'Id': '3560'}]},
-                                            "Processo" : [f"{id_proceso}"],
-                                            "Anexo Recibo/Guia": [f"{id}"],
-                                            "Pagamento": f"{id_sistema_pagamento}"
+                        "Responsável Pagamento no CS": {"UserList": [{'Id': '3560'}]},
+                        "Processo" : [f"{id_proceso}"],
+                        "Anexo Recibo/Guia": [f"{id}"],
+                        "Pagamento": f"{id_sistema_pagamento}"
                                             }
         cadastrar_arteria(dados_update, "Recibo")
         if ramo != '66 - HABITACIONAL':
