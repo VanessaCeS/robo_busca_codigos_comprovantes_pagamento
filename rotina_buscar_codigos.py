@@ -1,5 +1,4 @@
 import os
-import re
 import util
 import scpjud
 import traceback
@@ -9,10 +8,9 @@ import motivorecusapag
 from datetime import datetime
 from dotenv import load_dotenv
 from classe_sap import SAPAutomation
-from leitura_relatorios_arteria import search_xml, get_dados_pagamentos_codigo_comprovantes
+from leitura_relatorios_arteria import search_xml_busca_cvp_e_csh, search_xml_busca_cnp, get_dados_pagamentos_codigo_comprovantes
 sap = SAPAutomation()
 load_dotenv() 
-
 url = {
     "PROD": "https://websites.caixaseguradora.com.br",
 }
@@ -20,14 +18,27 @@ url = url[os.getenv("AMBIENTE")]
 padrao_regex = r".*411$"
 
 def rotina_sap():
-    pagamentos = get_dados_pagamentos_codigo_comprovantes(search_xml)
-    if pagamentos:
-        rotina_buscar_doc_compencacao_sap(pagamentos)
+    rotina_buscar_doc_compencacao_sap_cvp_e_csh()
+    rotina_buscar_doc_compencacao_sap_cnp()
 
-def rotina_buscar_doc_compencacao_sap(pagamentos):
+def rotina_buscar_doc_compencacao_sap_cnp():    
+    pagamentos = get_dados_pagamentos_codigo_comprovantes(search_xml_busca_cnp)
+    sap.exec_sap_gui('CNP')
+    sap.login_sap_gui('CNP')
+    
+    for pagamento in pagamentos:
+        pagamento['Tipo Pagamento'] = 'cnp'
+        rotina_buscar_codigos_sap(pagamento)
+
+
+def rotina_buscar_doc_compencacao_sap_cvp_e_csh():
+    pagamentos = get_dados_pagamentos_codigo_comprovantes(search_xml_busca_cvp_e_csh)
     sap.login_sap_gui()
     for pagamento in pagamentos:
-            rotina_buscar_codigos_sap(pagamento)
+        pagamento['Tipo Pagamento'] = False
+        rotina_buscar_codigos_sap(pagamento)
+    sap.sap_logoff()
+
 
 def rotina_buscar_codigos_sap(pagamento):
     erros = []
@@ -35,7 +46,7 @@ def rotina_buscar_codigos_sap(pagamento):
             if pagamento.get('Módulo de Pagamento'):
                 if pagamento['Módulo de Pagamento'][0] == 'SAP':
                         if pagamento['Número do Pré Editado'] != "":
-                            pagamento['cod_empresa'] = pegar_cod_ramo_correto_sap(pagamento['Número do Pré Editado'])
+                            pagamento['cod_empresa'] = pegar_cod_ramo_correto_sap(pagamento['Número do Pré Editado'], pagamento['Tipo Pagamento'])
                         else:
                             return "Não existe pre editado para a pesquisa."
             if pagamento.get('Módulo de Pagamento'):
@@ -81,18 +92,18 @@ def rotina_buscar_codigos_sap(pagamento):
                 pass
             else:
                 buscar_codigo_documento_sap(os.getenv("parametro_doc"),
-                                                pagamento['cod_empresa'],
-                                                pagamento['Data Estimada do Recebimento do Comprovante no C&S'],
-                                                pagamento
-                                                )
+                                            pagamento['cod_empresa'],
+                                            pagamento['Data Estimada do Recebimento do Comprovante no C&S'],
+                                            pagamento, 
+                                            pagamento['Tipo Pagamento'])
                 
     except Exception as e:
         print("ERROR", e)
         erros.append(traceback.print_exc())
 
-def pegar_cod_ramo_correto_sap(id_pagamento_sap):
+def pegar_cod_ramo_correto_sap(id_pagamento_sap, tipo_pagamento):
     abrir_pedido_sap(id_pagamento_sap)
-    cod_ramo = pegar_numero_correto_ramo()
+    cod_ramo = pegar_numero_correto_ramo(tipo_pagamento)
     return cod_ramo
 
 def abrir_pedido_sap(id_pagamento_sap):
@@ -108,16 +119,21 @@ def sap_busca():
         sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "F00005"
         sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00005")
     except Exception as e:
-        print("Erro ao iniciar busca ", e)
+         print("Erro ao iniciar busca ", e)
 
-def pegar_numero_correto_ramo():
+def pegar_numero_correto_ramo(tipo_pagamento):
     if not sap.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200"
                             "/subSUB1:SAPLMEGUI:1102/tabsHEADER_DETAIL/tabpTABHDT9"):
         sap.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB1:SAPLMEVIEWS:1100/subSUB1:SAPLMEVIEWS:4000"
                             "/btnDYN_4000-BUTTON").press()
     sap.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200"
                                         "/subSUB1:SAPLMEGUI:1102/tabsHEADER_DETAIL/tabpTABHDT9").select()
-    aux = sap.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:"
+    if tipo_pagamento:
+        aux = sap.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:"
+                        "1200/subSUB1:SAPLMEGUI:1102/tabsHEADER_DETAIL/tabpTABHDT9/ssubTABSTRIPCONTROL2SUB"
+                        ":SAPLMEGUI:1221/ctxtMEPO1222-BUKRS").text
+    else:
+        aux = sap.verifica_sap("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB1:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:"
                         "1200/subSUB1:SAPLMEGUI:1102/tabsHEADER_DETAIL/tabpTABHDT9/ssubTABSTRIPCONTROL2SUB"
                         ":SAPLMEGUI:1221/ctxtMEPO1222-BUKRS").text
     sap.verifica_sap("wnd[0]/tbar[0]/btn[12]").press()
@@ -176,11 +192,17 @@ def mandar_banco_de_dados(pagamento):
     
     
 
-def buscar_codigo_documento_sap(parametro_doc, cod_empresa, dt_recebimento_comprovante, pagamento):
-        sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00002")
+def buscar_codigo_documento_sap(parametro_doc, cod_empresa, dt_recebimento_comprovante, pagamento, tipo_pagamento):
+        if tipo_pagamento:
+            sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00003")
+        else:
+            sap.verifica_sap("wnd[0]/usr/cntlIMAGE_CONTAINER/shellcont/shell/shellcont[0]/shell").doubleClickNode("F00002")
+        print('ano --> ', dt_recebimento_comprovante[-4:])
         sap.verifica_sap("wnd[0]/usr/ctxtP_VARIA").text = parametro_doc
         sap.verifica_sap("wnd[0]/usr/ctxtS_BUKRS-LOW").text = cod_empresa
-        sap.verifica_sap("wnd[0]/usr/txtS_GJAHR-LOW").text = dt_recebimento_comprovante[-4:]
+        ano = dt_recebimento_comprovante[-4:] if dt_recebimento_comprovante != '01/01/2024' else '2023'
+        sap.verifica_sap("wnd[0]/usr/txtS_GJAHR-LOW").text = ano
+
         sap.verifica_sap("wnd[0]/usr/txtS_ZIDLG-LOW").text = ''
 
         if 'Número do Pré Editado' in pagamento:
@@ -197,12 +219,17 @@ def buscar_codigo_documento_sap(parametro_doc, cod_empresa, dt_recebimento_compr
             dados_update = {"Observação Costa e Silva": f"Não há solicitante associado a esse pagamento - <br> {data.day}/{data.month} - {data.strftime('%X')[:-3]}"}
             funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', pagamento["ID do Sistema - Pagamento"])
 
-        achar_comprovantes(pagamento['Número do Pré Editado'], cod_empresa, pagamento["ID do Sistema - Pagamento"], solicitante,  pagamento['ID do processo - Robo - Integra'], pagamento['Módulo de Pagamento'][0], pagamento['Ramo'], pagamento['DOC. Compensação'])
+        achar_comprovantes(pagamento['Número do Pré Editado'], cod_empresa, pagamento["ID do Sistema - Pagamento"], solicitante,  pagamento['ID do processo - Robo - Integra'], pagamento['Módulo de Pagamento'][0], pagamento['Ramo'], pagamento['DOC. Compensação'], pagamento['Tipo Pagamento'])
 
             
-def achar_comprovantes(id_pagamento_sap, cod_empresa, id_sistema_pagamento, solicitante_id,  id_processo, mod_pagamento, ramo, compesacao):
+def achar_comprovantes(id_pagamento_sap, cod_empresa, id_sistema_pagamento, solicitante_id,  id_processo, mod_pagamento, ramo, compesacao, tipo_pagamento):
     if sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell"):    
-        if cod_empresa != 'D011':
+        if cod_empresa == 'C010':
+            sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").currentCellColumn = "AUGBL"
+            doc_compesacao = sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").GetCellValue(0,'AUGBL')
+            dados_update = {"DOC. Compensação": f"{doc_compesacao}"}
+            funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', id_sistema_pagamento)
+        elif cod_empresa != 'D011':
                 sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").currentCellColumn = "AUGBL"
                 doc_compesacao = sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").GetCellValue(0,'AUGBL')
                 if doc_compesacao != '':
@@ -210,12 +237,18 @@ def achar_comprovantes(id_pagamento_sap, cod_empresa, id_sistema_pagamento, soli
                     funcoes_arteria.cadastrar_arteria(dados_update, 'Pagamento', id_sistema_pagamento)
                     
                     sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").clickCurrentCell()
-                    sap.buscar_comprovante(id_sistema_pagamento, solicitante_id,  id_processo, ramo)
+                    if not tipo_pagamento:
+                        sap.buscar_comprovante_csh(id_sistema_pagamento, solicitante_id,  id_processo, ramo)
+                    else:
+                        sap.buscar_comprovante(id_sistema_pagamento, solicitante_id,  id_processo, ramo)
 
                 sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").currentCellColumn = "BELNR"
                 sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").clickCurrentCell()
-                sap.buscar_comprovante(id_sistema_pagamento,solicitante_id,  id_processo, ramo)
-            
+                if not tipo_pagamento:
+                    sap.buscar_comprovante_csh(id_sistema_pagamento,solicitante_id,  id_processo, ramo)
+                else:
+                    sap.buscar_comprovante(id_sistema_pagamento,solicitante_id,  id_processo, ramo)
+                    
         elif cod_empresa == 'D011' and compesacao == '':
             sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").currentCellColumn = "AUGBL"
             doc_compesacao = sap.verifica_sap("wnd[0]/usr/cntlGRID1/shellcont/shell").GetCellValue(0,'AUGBL')
