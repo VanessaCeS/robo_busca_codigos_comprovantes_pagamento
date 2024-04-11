@@ -1150,11 +1150,11 @@ def enviar_comprovante_arteria(id_sistema_pagamento, solicitante_id,  id_proceso
         cadastrar_arteria(dados_update, "Recibo")
         if ramo != '66 - HABITACIONAL':
             avanca_etapa_wf(id_sistema_pagamento,"Próxima Etapa",'Recibo')
-
+        with open('recibos_achados_ids.txt', 'a', encoding='utf-8') as f:
+            f.write(f"ID - {id_sistema_pagamento},  Nome - {nome_arquivo}\n")
 
 def pegar_arquivo(nome,diretorio):
     prefixo = nome.replace('.PDF','')
-    
     arquivos = os.listdir(diretorio)
     arquivos_filtrados = [arquivo for arquivo in arquivos if arquivo.startswith(prefixo)]
     if arquivos_filtrados:

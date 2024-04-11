@@ -4,8 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from funcoes_arteria import cadastrar_arteria
-from classe_sap import SAPAutomation
-sap = SAPAutomation()
+
 load_dotenv() 
 url = {
     "PROD": "https://websites.caixaseguradora.com.br",

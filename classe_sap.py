@@ -13,21 +13,25 @@ load_dotenv('.env')
 
 class SAPAutomation:
     def __init__(self):
-        self.sap_username = os.environ.get('sap_username')
-        self.sap_password = os.environ.get('sap_password')
+        self.sap_username_csh = os.environ.get('sap_username_csh')
+        self.sap_password_csh = os.environ.get('sap_password_csh')
+        self.sap_username_cnp = os.environ.get('sap_username_cnp')
+        self.sap_password_cnp = os.environ.get('sap_password_cnp')
         self.path_sap = os.environ.get('path_sap')
         self.session = self.exec_sap_gui()
 
-    def exec_sap_gui(self):
+    def exec_sap_gui(self, tipo_sap=None):
         subprocess.Popen(self.path_sap)
-        sleep(2)
+        sleep(3)
         sapgui = win32com.client.GetObject("SAPGUI")
         application = sapgui.GetScriptingEngine
-        connection = application.OpenConnection("SAP ECC", True)
-        sleep(2)
-        session = connection.Children(0)
-        sleep(2)
-        return session
+        if not tipo_sap:
+            connection = application.OpenConnection("SAP ECC", True)
+        else:
+            connection = application.OpenConnection("SAP ECC CNP", True)
+        self.session = connection.Children(0)
+        return self.session
+
 
     def get_sap_id(self, path):
         existing = path.split('/')
@@ -178,18 +182,25 @@ class SAPAutomation:
         if self.verifica_sap_rapido("wnd[1]/usr/btnBUTTON_1"):
             self.verifica_sap_rapido("wnd[1]/usr/btnBUTTON_1").press()
 
-    def login_sap_gui(self):
+    def login_sap_gui(self,tipo_empresa=None):
         try:
             if self.verifica_sap("wnd[0]/usr/txtRSYST-MANDT"):
                 self.verifica_sap("wnd[0]/usr/txtRSYST-MANDT").text = "400"
-                self.verifica_sap("wnd[0]/usr/txtRSYST-BNAME").text = self.sap_username
-                self.verifica_sap("wnd[0]/usr/pwdRSYST-BCODE").text = self.sap_password
+                if not tipo_empresa:
+                    self.verifica_sap("wnd[0]/usr/txtRSYST-BNAME").text = self.sap_username_csh
+                    self.verifica_sap("wnd[0]/usr/pwdRSYST-BCODE").text = self.sap_password_csh
+                elif tipo_empresa == 'CNP':
+                    self.verifica_sap("wnd[0]/usr/txtRSYST-BNAME").text = self.sap_username_cnp
+                    self.verifica_sap("wnd[0]/usr/pwdRSYST-BCODE").text = self.sap_password_cnp
+
                 self.verifica_sap("wnd[0]/usr/txtRSYST-LANGU").text = "PT"
                 self.verifica_sap("wnd[0]").sendVKey(0)
-
+                
                 if self.verifica_sap("wnd[1]/usr/radMULTI_LOGON_OPT1"):
                     self.verifica_sap("wnd[1]/usr/radMULTI_LOGON_OPT1").select()
                     self.verifica_sap("wnd[1]").sendVKey(0)
+
+                self.verifica_sap("wnd[0]/tbar[0]/btn[0]").press()
         except Exception:
             print(sys.exc_info()[0])
 
@@ -362,6 +373,23 @@ class SAPAutomation:
             self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
             print("Erro ao buscar comprovante => ", e)
         
+    def buscar_comprovante_csh(self ,id_sistema_pagamento, solicitante_id,  id_proceso, ramo):
+        try:
+            self.verifica_sap("wnd[0]/usr/cntlCTRL_CONTAINERBSEG/shellcont/shell").currentCellColumn = "AUGBL"
+            self.verifica_sap("wnd[0]/usr/cntlCTRL_CONTAINERBSEG/shellcont/shell").doubleClickCurrentCell()
+
+            self.verifica_sap("wnd[0]/titl/shellcont/shell").pressButton("%GOS_TOOLBOX")
+            self.verifica_sap("wnd[0]/shellcont/shell").pressButton("VIEW_ATTA")
+
+            self.buscar_arquivos_tabela(id_sistema_pagamento, solicitante_id , id_proceso, ramo)
+            self.verifica_sap("wnd[1]/tbar[0]/btn[0]").press()
+            
+            self.verifica_sap("wnd[0]/shellcont").close()
+            self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
+            self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
+        except Exception as e:
+            self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
+            print("Erro ao buscar comprovante => ", e)
 
     def voltar_menu_principal(self):
         self.verifica_sap("wnd[0]/tbar[0]/btn[3]").press()
